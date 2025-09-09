@@ -1,0 +1,6 @@
+{
+  "led": {
+    "name": "firefly",
+    "state": "off"
+  }
+}
