@@ -7,6 +7,9 @@ const char* SOCKET_PATH = "/tmp/bootlistener.sock";
 int server_fd;
 
 int main() {
+
+     int entered_successfully=0;
+
     // 1. Create socket
      server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
      if (server_fd < 0) {
@@ -53,15 +56,35 @@ int main() {
           // 5. Read message from client
           char buf[256];
           ssize_t n = read(client_fd, buf, sizeof(buf) - 1);
-          if (n > 0) {
-               buf[n] = '\0';  // null-terminate
-               std::string cmd(buf);
-               std::cout << "Data Received: " << cmd << std::endl;
+               if (n > 0) {
+                    buf[n] = '\0';  // null-terminate
+                    std::string cmd(buf);
+                    std::string ack;
 
-          
-
+                    if (cmd == "boot" && entered_successfully == 0) 
+                    {
+                         entered_successfully = 1;
+                         ack = "Console entered successfully\n";
+                         write(client_fd, ack.c_str(), ack.size());
+                    }
+                    else if (entered_successfully == 0) 
+                    {
+                         ack = "Invalid Command\n";
+                         write(client_fd, ack.c_str(), ack.size());
+                    }
+                    else if (cmd == "exit" && entered_successfully == 1) 
+                    {
+                         ack = "Exiting console\n";
+                         write(client_fd, ack.c_str(), ack.size());
+                         close(client_fd);
+                         break;
+                    }
+                    else if (entered_successfully)
+                    {
+                         ack = "Invalid Command\n";
+                         write(client_fd, ack.c_str(), ack.size());
+                    }
           }
-          close(client_fd);  // close connection after reading
      }
      return 0;
 
