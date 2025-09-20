@@ -1,91 +1,106 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include <iostream>
 
 const char* SOCKET_PATH = "/tmp/bootlistener.sock";
 int server_fd;
 
 int main() {
-
-     int entered_successfully=0;
-
     // 1. Create socket
-     server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-     if (server_fd < 0) {
-          std::cerr<<"Socket creation failed";
-          return 1;
-     }
-
-     std::cout << "Socket created successfully.\n";
+    server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (server_fd < 0) {
+        std::cerr << "Socket creation failed";
+        return 1;
+    }
 
     // 2.Binding
 
-     sockaddr_un addr{};                // create address structure
-     addr.sun_family = AF_UNIX;         // UNIX domain socket
-     strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1); // copy path
+    sockaddr_un addr{};                                              // create address structure
+    addr.sun_family = AF_UNIX;                                       // UNIX domain socket
+    strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);  // copy path
 
-     // Remove old socket file if exists
-     unlink(SOCKET_PATH);
+    // Remove old socket file if exists
+    unlink(SOCKET_PATH);
 
-     if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-     std::cerr<<"Binding Failed";
-     return 1;
-     }
+    if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        std::cerr << "Binding Failed";
+        return 1;
+    }
 
-     std::cout << "Socket bound to " << SOCKET_PATH << std::endl;
+    // 3.Listening to clients
+    if (listen(server_fd, 5) < 0) {
+        std::cerr << "listening Failed";
+        return 1;
+    }
 
-     // 3.Listening to clients
-     if (listen(server_fd, 5) < 0) {
-     std::cerr<<"listening Failed";
-     return 1;
-     }
+    // 4.Accept client connection
+    bool stopServer = false;
 
-     std::cout << "Socket is now listening for clients..." << std::endl;
+    while (!stopServer) {
+        // 4. Accept a client connection
+        int client_fd = accept(server_fd, nullptr, nullptr);
+        if (client_fd < 0) {
+            std::cerr << "Accept Failed";
+            continue;  // if error, wait for the next client
+        }
 
-     // 4.Accept client connection
+        // 5. Read message from client
+        bool logged_in = false;
 
-     while (true) {
-     // 4. Accept a client connection
-          int client_fd = accept(server_fd, nullptr, nullptr);
-          if (client_fd < 0) {
-               std::cerr<<"Accept Failed";
-               continue;  // if error, wait for the next client
-          }
+        while (!logged_in) {
+            char buf[256];
+            ssize_t n = read(client_fd, buf, sizeof(buf) - 1);
+            if (n <= 0) continue;
+            buf[n] = '\0';
+            std::string input(buf);
 
-          // 5. Read message from client
-          char buf[256];
-          ssize_t n = read(client_fd, buf, sizeof(buf) - 1);
-               if (n > 0) {
-                    buf[n] = '\0';  // null-terminate
-                    std::string cmd(buf);
-                    std::string ack;
+            // Expect username first
+            if (!logged_in) {
+                if (input == "root") {
+                    std::string ack = "password: ";
+                    write(client_fd, ack.c_str(), ack.size());
 
-                    if (cmd == "boot" && entered_successfully == 0) 
-                    {
-                         entered_successfully = 1;
-                         ack = "Console entered successfully\n";
-                         write(client_fd, ack.c_str(), ack.size());
+                    // Read password
+                    n = read(client_fd, buf, sizeof(buf) - 1);
+                    if (n <= 0) continue;
+                    buf[n] = '\0';
+                    std::string password(buf);
+
+                    if (password == "password") {
+                        logged_in = true;
+                        std::string ack2 = "Entering Console\n";
+                        write(client_fd, ack2.c_str(), ack2.size());
                     }
-                    else if (entered_successfully == 0) 
-                    {
-                         ack = "Invalid Command\n";
-                         write(client_fd, ack.c_str(), ack.size());
-                    }
-                    else if (cmd == "exit" && entered_successfully == 1) 
-                    {
-                         ack = "Exiting console\n";
-                         write(client_fd, ack.c_str(), ack.size());
-                         close(client_fd);
-                         break;
-                    }
-                    else if (entered_successfully)
-                    {
-                         ack = "Invalid Command\n";
-                         write(client_fd, ack.c_str(), ack.size());
-                    }
-          }
-     }
-     return 0;
+                } else {
+                    std::string ack2 = "Invalid Credentials\n";
+                    write(client_fd, ack2.c_str(), ack2.size());
+                }
+            }
+        }
 
+        // Once logged in, echo whatever client sends
+        while (true) {
+            char buf[256];
+            ssize_t n = read(client_fd, buf, sizeof(buf) - 1);
+            if (n <= 0) break;
+            buf[n] = '\0';
+            std::string cmd(buf);
+
+            if (cmd == "exit") {
+                std::string ack = "Console exited\n";
+                write(client_fd, ack.c_str(), ack.size());
+                stopServer = true;
+                close(client_fd);
+
+                break;
+            }
+
+            // Echo back other commands
+            write(client_fd, cmd.c_str(), cmd.size());
+        }
+    }
+    close(server_fd);
+    return 0;
 }
