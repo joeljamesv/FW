@@ -95,6 +95,10 @@ int main() {
       buf[n] = '\0';
       std::string cmd(buf);
 
+      if (cmd.empty()) {
+        continue;
+      }
+
       if (cmd == "exit") {
         std::string ack = "Console exited\n";
         write(client_fd, ack.c_str(), ack.size());
@@ -105,8 +109,17 @@ int main() {
       }
 
       // Echo back other commands
-      process_command(cmd);
-      write(client_fd, cmd.c_str(), cmd.size());
+      bool status;
+      status = process_command(cmd);
+      std::string ack;
+
+      if (status == true) {
+        ack = "Command Accepted";
+      } else {
+        ack = "Invalid Command";
+      }
+
+      write(client_fd, ack.c_str(), ack.size());
     }
   }
   close(server_fd);

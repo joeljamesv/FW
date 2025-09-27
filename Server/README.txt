@@ -28,3 +28,30 @@ from the server
 COMMANDCENTER
 
 A command center is made to multiplex the commands that are received through the server
+
+commands : <action>:<target>:<property>:<value>
+
+<action>
+
+get:
+set:
+
+<target>
+
+led: firefly
+
+<property>
+
+state:
+
+<value>
+
+led
+off:
+on:
+
+
+
+
+
+
