@@ -2,12 +2,13 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include "../LOGS/logging.hpp"
 #include "commandcenter.hpp"
+#include "logging.hpp"
 #include <iostream>
 
 const char *SOCKET_PATH = "/tmp/bootlistener.sock";
 int server_fd;
+const char *hostname = "ServerApp";
 
 int main() {
   // 1. Create socket
@@ -86,8 +87,9 @@ int main() {
         }
       }
     }
+    // Logging successfull entry
 
-    log_event("enterd successfully");
+    log_event(hostname, "Firmware Console Log-In Successfull");
 
     // Once logged in, echo whatever client sends
     while (true) {
