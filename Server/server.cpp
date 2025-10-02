@@ -2,6 +2,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include "../LOGS/logging.hpp"
 #include "commandcenter.hpp"
 #include <iostream>
 
@@ -85,6 +86,8 @@ int main() {
         }
       }
     }
+
+    log_event("enterd successfully");
 
     // Once logged in, echo whatever client sends
     while (true) {
