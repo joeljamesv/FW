@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 void log_event(const char *hostname, std::string event) {
-  std::string log_file_path = "../../var/logs.txt";
+  std::string log_file_path = "../../System/var/logs.txt";
 
   std::filesystem::path parent_dir =
       std::filesystem::path(log_file_path).parent_path();
