@@ -7,7 +7,7 @@ BIN_DIR = bin
 TARGET = $(BIN_DIR)/execute_me
 
 # Source files
-SRC = server.cpp commandcenter.cpp logging.cpp
+SRC = server.cpp commandcenter.cpp logging.cpp device_manager.cpp
 
 # Object files in bin directory
 OBJ = $(patsubst %.cpp,$(BIN_DIR)/%.o,$(notdir $(SRC)))

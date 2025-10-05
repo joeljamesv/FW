@@ -4,6 +4,7 @@
 
 #include "commandcenter.hpp"
 #include "logging.hpp"
+#include "device_manager.hpp"
 #include <iostream>
 
 const char *SOCKET_PATH = "/tmp/bootlistener.sock";
@@ -90,6 +91,7 @@ int main() {
     // Logging successfull entry
 
     log_event(hostname, "Firmware Console Log-In Successfull");
+    create_fake_devices();
 
     // Once logged in, echo whatever client sends
     while (true) {
