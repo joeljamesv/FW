@@ -1,6 +1,9 @@
 {
   "led": {
     "name": "firefly",
-    "state": "off"
+    "state": "off",
+    "bus": "i2c-3",
+    "address": "0x40",
+    "sysfs_path": "FW/System/sys/bus/i2c/devices/3-0040"
   }
 }

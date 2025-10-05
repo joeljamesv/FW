@@ -50,6 +50,19 @@ led
 off:
 on:
 
+-------------------------------------------------------------
+
+LOGGING
+
+logs the events generated with help of syslog.h 
+
+--------------------------------------------------------------
+
+DEVICE_MANAGER
+
+device manager once successfully logged in creates a device : here led
+create a fake bus-path and device along with name, modalias, bus and address to get detected
+by our stuffs.
 
 
 
